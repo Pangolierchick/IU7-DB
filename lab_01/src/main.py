@@ -2,7 +2,7 @@ import requests
 import configparser
 import parser
 import json
-import asyncio
+import logging as log
 
 def parse_cfg(cfg_path:str) -> dict:
     config = configparser.ConfigParser()
@@ -68,4 +68,5 @@ def main():
     dumpApps(apps)
 
 if __name__ == '__main__':
+    log.basicConfig(filename="db_lab01.log", level=log.INFO, format='%(asctime)s [ %(levelname)s ] %(message)s', datefmt='[ %d-%m-%y %H:%M:%S ] ')
     main()

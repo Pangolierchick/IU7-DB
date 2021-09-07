@@ -12,6 +12,7 @@ class APILinks(Enum):
     APP_GET           = 'http://store.steampowered.com/api/appdetails'
     FRIENDS_LIST_GET  = 'http://api.steampowered.com/ISteamUser/GetFriendList/v0001/'
     PROFILE_DESCR_GET = 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/'
+    PROFILES_APPS     = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/'
 
 class SteamParser:
     def __init__(self, api_key:str):
@@ -85,5 +86,13 @@ class SteamParser:
         print(accounts)
 
         return accounts
+    
+    def getProfilesApp(self, steamid):
+        r = requests.get(APILinks.PROFILES_APPS.value, { 'key': self.api_key, 'steamid': steamid })
+
+        if r.status_code == Status.OK.value:
+            return r.json()['response']
+        
+        return {}
 
 
