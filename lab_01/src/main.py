@@ -3,6 +3,7 @@ import configparser
 import parser
 import json
 import logging as log
+import dbase
 
 def parse_cfg(cfg_path:str) -> dict:
     config = configparser.ConfigParser()
@@ -60,12 +61,21 @@ def readAccs(filename='accs.txt'):
     with open(filename, 'r') as f:
         return f.readlines()
 
+def readAccsJson(filename='accs.json'):
+    with open(filename, 'r') as f:
+        return json.load(f)
+
 def main():
     config = parse_cfg('./config.ini')
     p = parser.SteamParser(get_api_key(config))
+    base = dbase.SteamDBase(config['dbase']['password'])
 
-    apps = p.getApps()
-    dumpApps(apps)
+    accs = readAccsJson()
+    
+    for i in accs:
+        acc = [(i['steamid'], i['personaname'], i['timecreated'], i['profileurl'], i['personastate'])]
+        print(acc)
+        base.insertAccs(acc)
 
 if __name__ == '__main__':
     log.basicConfig(filename="db_lab01.log", level=log.INFO, format='%(asctime)s [ %(levelname)s ] %(message)s', datefmt='[ %d-%m-%y %H:%M:%S ] ')

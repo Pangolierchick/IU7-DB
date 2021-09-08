@@ -8,11 +8,15 @@ class Status(Enum):
     INTERNAL_ERROR = 500
 
 class APILinks(Enum):
-    APP_LIST_GET      = 'http://api.steampowered.com/ISteamApps/GetAppList/v2'
-    APP_GET           = 'http://store.steampowered.com/api/appdetails'
-    FRIENDS_LIST_GET  = 'http://api.steampowered.com/ISteamUser/GetFriendList/v0001/'
-    PROFILE_DESCR_GET = 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/'
-    PROFILES_APPS     = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/'
+    APP_LIST_GET        = 'http://api.steampowered.com/ISteamApps/GetAppList/v2'
+    APP_GET             = 'http://store.steampowered.com/api/appdetails'
+    FRIENDS_LIST_GET    = 'http://api.steampowered.com/ISteamUser/GetFriendList/v0001/'
+    PROFILE_DESCR_GET   = 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/'
+    PROFILES_APPS       = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/'
+    PLAYER_ACHIEVEMENTS = 'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/'
+    CURRENT_PLAYING     = 'http://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1'
+    DOTA2_ITEMS         = 'http://api.steampowered.com/IEconDOTA2_570/GetGameItems/v1'
+    APP_NEWS            = 'http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/'
 
 class SteamParser:
     def __init__(self, api_key:str):
@@ -92,6 +96,38 @@ class SteamParser:
 
         if r.status_code == Status.OK.value:
             return r.json()['response']
+        
+        return {}
+    
+    def getProfilesAchievment(self, steamid, appid):
+        r = requests.get(APILinks.PLAYER_ACHIEVEMENTS.value, { 'key': self.api_key, 'steamid': steamid, 'appid': appid })
+
+        if r.status_code == Status.OK.value:
+            return r.json()['response']
+        
+        return {}
+    
+    def getCurrentPlayers(self, appid):
+        r = requests.get(APILinks.CURRENT_PLAYING.value, { 'key': self.api_key, 'appid': appid })
+
+        if r.status_code == Status.OK.value:
+            return r.json()['response']
+        
+        return {}
+    
+    def getDota2Items(self):
+        r = requests.get(APILinks.DOTA2_ITEMS.value, { 'key': self.api_key })
+
+        if r.status_code == Status.OK.value:
+            return r.json()['result']['items']
+        
+        return {}
+    
+    def getAppNews(self, appid, count, maxlenght=100):
+        r = requests.get(APILinks.APP_NEWS.value, { 'key': self.api_key, 'appid': appid, 'count': count, 'maxlength':maxlenght })
+
+        if r.status_code == Status.OK.value:
+            return r.json()
         
         return {}
 
