@@ -5,16 +5,26 @@ class SteamDBase:
         self.connection = psycopg2.connect(database='db_labs', user='postgres', password=password)
 
         self.createAccsTable()
-        self.createAppTable()
-        self.createInventory()
-        self.createDota2Items()
+        self.createAppsTable()
+        self.createPlaytimeTable()
+        self.createInventoryTable()
     
     def __del__(self):
         self.connection.close()
 
-    def createAppTable(self):
+    def createAppsTable(self):
         with self.connection.cursor() as cur:
-            cur.execute('CREATE TABLE IF NOT EXISTS apps (id bigint PRIMARY KEY, name VARCHAR NOT NULL)')
+            cur.execute(
+                '''
+                CREATE TABLE IF NOT EXISTS apps(
+                    id bigint PRIMARY KEY,
+                    name varchar NOT NULL,
+                    author varchar,
+                    date date,
+                    title VARCHAR NOT NULL
+                    )
+                '''
+                )
 
         self.connection.commit()
 
@@ -23,39 +33,54 @@ class SteamDBase:
             cur.execute(
             '''
             CREATE TABLE IF NOT EXISTS accs (
-            id bigint PRIMARY KEY,
-            name VARCHAR NOT NULL,
-            timecreated INT NOT NULL,
-            profileurl VARCHAR,
-            profilestate INT,
-            CHECK (timecreated > 0))
+                id bigint PRIMARY KEY,
+                name VARCHAR NOT NULL,
+                timecreated INT NOT NULL,
+                profileurl VARCHAR,
+                profilestate INT,
+                CHECK (timecreated > 0))
             ''')
 
         self.connection.commit()
-
-    def createInventory(self):
+    
+    def createPlaytimeTable(self):
         with self.connection.cursor() as cur:
-            cur.execute('CREATE TABLE IF NOT EXISTS inventory (appid bigint REFERENCES apps (id), playtime INT, playtime_2weeks INT, userid bigint REFERENCES accs (id), CHECK(playtime >= 0))')
+            cur.execute(
+            '''
+            CREATE TABLE IF NOT EXISTS playtime (
+                id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+                forever int NOT NULL,
+                weeks2 int NOT NULL,
+                windows int NOT NULL,
+                mac int NOT NULL,
+                linux int NOT NULL
+            )
+            '''
+            )
         
         self.connection.commit()
 
-    def createDota2Items(self):
+    def createInventoryTable(self):
         with self.connection.cursor() as cur:
-            cur.execute('''CREATE TABLE IF NOT EXISTS dota2items
-            (id INT PRIMARY KEY,
-            name VARCHAR,
-            cost INT,
-            secret_shop INT,
-            side_shop INT,
-            recipe INT
-            )''')
+            cur.execute(
+                '''
+                CREATE TABLE IF NOT EXISTS inventory (
+                    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+                    FOREIGN KEY (appid) REFERENCES apps(id),
+                    FOREIGN KEY (playtime_id) REFERENCES playtime(id),
+                    FOREIGN KEY (user_id) REFERENCES accs(id),
+                    gifted int NOT NULL,
+                    price int NOT NULL
+                )
+                '''
+            )
         
         self.connection.commit()
 
     def insertApps(self, apps):
         with self.connection.cursor() as cur:
             records_list_template = ','.join(['%s'] * len(apps))
-            cur.execute('INSERT INTO apps (id, name) VALUES ' + records_list_template, apps)
+            cur.execute('INSERT INTO apps (id, name, author, date, title) VALUES ' + records_list_template, apps)
         
         self.connection.commit()
 
@@ -69,14 +94,22 @@ class SteamDBase:
     def insertInventory(self, apps):
         with self.connection.cursor() as cur:
             records_list_template = ','.join(['%s'] * len(apps))
-            cur.execute('INSERT INTO inventory (appid, playtime, playtime_2weeks, userid) VALUES ' + records_list_template, apps)
+            try:
+                cur.execute('INSERT INTO inventory (appid, playtime_id, user_id, gifted, price) VALUES ' + records_list_template, apps)
+            except Exception as e:
+                print(e)
         
         self.connection.commit()
     
-    def insertDota2Items(self, items):
+    def insertPlaytime(self, playtime):
         with self.connection.cursor() as cur:
-            records_list_template = ','.join(['%s'] * len(items))
-            cur.execute('INSERT INTO dota2items (id, name, cost, secret_shop, side_shop, recipe) VALUES ' + records_list_template, items)
-        
+            records_list_template = ','.join(['%s'] * len(playtime))
+            try:
+                cur.execute('INSERT INTO playtime (forever, weeks2, windows, mac, linux) VALUES ' + records_list_template, playtime)
+            except Exception as e:
+                print(e)
+    
         self.connection.commit()
+    
+    
 
