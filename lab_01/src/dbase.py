@@ -66,9 +66,9 @@ class SteamDBase:
                 '''
                 CREATE TABLE IF NOT EXISTS inventory (
                     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-                    FOREIGN KEY (appid) REFERENCES apps(id),
-                    FOREIGN KEY (playtime_id) REFERENCES playtime(id),
-                    FOREIGN KEY (user_id) REFERENCES accs(id),
+                    appid bigint REFERENCES apps(id),
+                    playtime_id uuid REFERENCES playtime(id),
+                    user_id bigint REFERENCES accs(id),
                     gifted int NOT NULL,
                     price int NOT NULL
                 )
@@ -94,22 +94,21 @@ class SteamDBase:
     def insertInventory(self, apps):
         with self.connection.cursor() as cur:
             records_list_template = ','.join(['%s'] * len(apps))
-            try:
-                cur.execute('INSERT INTO inventory (appid, playtime_id, user_id, gifted, price) VALUES ' + records_list_template, apps)
-            except Exception as e:
-                print(e)
+            cur.execute('INSERT INTO inventory (id, appid, playtime_id, user_id, gifted, price) VALUES ' + records_list_template, apps)
         
         self.connection.commit()
     
     def insertPlaytime(self, playtime):
         with self.connection.cursor() as cur:
             records_list_template = ','.join(['%s'] * len(playtime))
-            try:
-                cur.execute('INSERT INTO playtime (forever, weeks2, windows, mac, linux) VALUES ' + records_list_template, playtime)
-            except Exception as e:
-                print(e)
+            cur.execute('INSERT INTO playtime (id, forever, weeks2, windows, mac, linux) VALUES ' + records_list_template, playtime)
     
         self.connection.commit()
     
+    def rollback(self):
+        with self.connection.cursor() as cur:
+            cur.execute('rollback')
+        
+        self.connection.commit()
     
 
