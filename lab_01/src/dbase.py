@@ -21,7 +21,8 @@ class SteamDBase:
                     name varchar NOT NULL,
                     author varchar,
                     date date,
-                    title VARCHAR NOT NULL
+                    title VARCHAR NOT NULL,
+                    dlc boolean NOT NULL
                     )
                 '''
                 )
@@ -30,6 +31,7 @@ class SteamDBase:
 
     def createAccsTable(self):
         with self.connection.cursor() as cur:
+            # default time created
             cur.execute(
             '''
             CREATE TABLE IF NOT EXISTS accs (
@@ -80,7 +82,7 @@ class SteamDBase:
     def insertApps(self, apps):
         with self.connection.cursor() as cur:
             records_list_template = ','.join(['%s'] * len(apps))
-            cur.execute('INSERT INTO apps (id, name, author, date, title) VALUES ' + records_list_template, apps)
+            cur.execute('INSERT INTO apps (id, name, author, date, title, dlc) VALUES ' + records_list_template, apps)
         
         self.connection.commit()
 
@@ -110,5 +112,67 @@ class SteamDBase:
             cur.execute('rollback')
         
         self.connection.commit()
+    
+    def getApps(self):
+        with self.connection.cursor() as cur:
+            cur.execute(
+                '''
+                SELECT * from apps;
+                ''')
+            fetch = cur.fetchall()
+
+        self.connection.commit()
+
+        return fetch
+    
+    def getAccs(self):
+        with self.connection.cursor() as cur:
+            cur.execute(
+                '''
+                SELECT * from accs;
+                ''')
+            fetch = cur.fetchall()
+
+        self.connection.commit()
+
+        return fetch
+    
+    def getPlaytime(self):
+        with self.connection.cursor() as cur:
+            cur.execute(
+                '''
+                SELECT * from playtime;
+                ''')
+            fetch = cur.fetchall()
+
+        self.connection.commit()
+
+        return fetch
+    
+    def getInventory(self):
+        with self.connection.cursor() as cur:
+            cur.execute(
+                '''
+                SELECT * from inventory;
+                ''')
+            fetch = cur.fetchall()
+
+        self.connection.commit()
+
+        return fetch
+    
+    def updateApps(self, apps):
+        with self.connection.cursor() as cur:
+            records_list_template = ','.join(['%s'] * len(apps))
+            cur.execute('UPDATE apps (id, name, author, date, title, dlc) VALUES ' + records_list_template, apps)
+        
+        self.connection.commit()
+    
+    def updateAppDLC(self, id, dlc):
+        with self.connection.cursor() as cur:
+            cur.execute(f'UPDATE apps SET dlc={dlc} where id = {id}')
+        
+        self.connection.commit()
+
     
 
