@@ -106,5 +106,52 @@ $$ language plpgsql;
 
 call change_playtime('0003809f-3d1f-4be8-adb1-8fbfefb446a4', 30, 0, 20)
 
+-- Рекурсивная хранимая процедура.
+create or replace procedure reqursive_proc(app_id bigint, iter int)
+as $$
+declare
+	name varchar;
+	author varchar;
+	parent bigint;
+begin
+	if iter > 10 then
+		return;
+	end if;
+	
+	select apps.name, apps.author, apps.parent
+	from apps
+	where apps.id = app_id
+	into name, author, parent;
+
+	raise notice '| name %s | id %s | parent %s |', name, app_id, parent;
+	
+	call reqursive_proc(parent, iter + 1);
+end;
+$$ language plpgsql;
+
+call reqursive_proc(10, 0);
+
+-- Хранимая процедура с курсором.
+-- Возвращает аккаунты, зарегистрированные между lo и hi
+create or replace procedure accs_between(lo date, hi date)
+as $$
+declare
+	cur_acc record;
+	accs_cur cursor for 
+		select *
+		from accs
+		where to_timestamp(accs.timecreated)::date between lo and hi;
+begin
+	open accs_cur;
+	loop
+		fetch accs_cur into cur_acc;
+		raise notice 'Name: %s, date %s', cur_acc.name, to_timestamp(cur_acc.timecreated)::date;
+		exit when not found;
+	end loop;
+	close accs_cur;
+end;
+$$ language plpgsql;
+
+call accs_between('2010-01-01', current_date);
 
 
