@@ -191,5 +191,34 @@ values(gen_random_uuid(), 4500, null, 76561198070966937, 1, 0);
 delete from inventory
 where user_id = 76561198070966937 and appid = 4500;
 
+-- Триггер Instead of
+-- Суммирует игровое время при вставке\обновлении записи в таблицу playtime
+
+create or replace function playtime_forever_handler()
+returns trigger as $$
+declare
+	total int;
+begin
+	total = new.windows + new.mac + new.linux;
+	new.forever = total;
+	
+	raise notice 'Updating forever playtime: %s', new.forever;
+	
+	return new;
+end;
+$$ language plpgsql;
+
+create view playtime_view as
+select * 
+from playtime 
+limit 100;
+
+create trigger playtime_forever_trigger instead of insert or update on playtime_view
+for each row execute procedure playtime_forever_handler();
+
+update playtime_view
+set linux = 100
+where playtime_view.id = '721fd6b0-9075-4e75-a900-98bff29f75e2';
+
 
 
