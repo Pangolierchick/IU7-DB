@@ -154,4 +154,42 @@ $$ language plpgsql;
 
 call accs_between('2010-01-01', current_date);
 
+-- Хранимая процедура доступа к метаданным.
+-- Выводит имя, ID и максимальное число параллельных соединений
+-- по имени БД.
+CREATE OR REPLACE PROCEDURE get_db_metadata(dbname VARCHAR)
+AS $$
+DECLARE
+    dbid INT;
+    dbconnlimit INT;
+BEGIN
+    SELECT pg.oid, pg.datconnlimit FROM pg_database pg WHERE pg.datname = dbname
+    INTO dbid, dbconnlimit;
+    RAISE NOTICE 'DB: %, ID: %, CONNECTION LIMIT: %', dbname, dbid, dbconnlimit;
+END;
+$$ LANGUAGE PLPGSQL;
+CALL get_db_metadata('db_labs');
+
+-- Триггер After
+-- Выводит уведомление, когда пользователь получает приложение в подарок.
+create or replace function present_handler()
+returns trigger as $$
+begin
+	if new.gifted = 1 then
+		raise notice 'User %s got present %s. Congratulations!', new.user_id, new.appid;
+	end if;
+	
+	return new;
+end;
+$$ language plpgsql;
+
+create trigger present_trigger after insert on inventory
+for row execute procedure present_handler();
+
+insert into inventory(id, appid, playtime_id, user_id, gifted, price)
+values(gen_random_uuid(), 4500, null, 76561198070966937, 1, 0);
+delete from inventory
+where user_id = 76561198070966937 and appid = 4500;
+
+
 
