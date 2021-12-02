@@ -27,6 +27,14 @@ def insert_wrapper(db:SteamDBase):
 
     return clojure
 
+def get_user_time_wrapper(db:SteamDBase):
+    def clojure():
+        name = input('Введите имя пользователя: ')
+
+        return db.user_time(name)
+    
+    return clojure
+
 def main():
     cfg = read_cfg('../config.ini')
     dbase = SteamDBase(get_password(cfg))
@@ -40,7 +48,8 @@ def main():
             transaction('Хранимая процедура (написанная в третьей лабораторной работе)', dbase.proc3),
             transaction('Cистемная функция или процедура', dbase.func),
             transaction('Создать таблицу в базе данных, соответствующую тематике БД', dbase.create_table),
-            transaction('Выполнить вставку данных в созданную таблицу с использованием инструкции INSERT', insert_wrapper(dbase))
+            transaction('Выполнить вставку данных в созданную таблицу с использованием инструкции INSERT', insert_wrapper(dbase)),
+            transaction('Получить время использование приложений аккаунта по никнейму в формате json', get_user_time_wrapper(dbase))
             ]
 
     while True:

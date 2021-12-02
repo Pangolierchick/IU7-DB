@@ -182,3 +182,47 @@ class SteamDBase:
             )
 
         self.connection.commit()
+
+    def user_time(self, name):
+        print(f'Inputted nickname is: "{name}"')
+        with self.connection.cursor() as cur:
+            cur.execute(
+                f'''
+                create or replace function get_user_time(n varchar)
+                returns table (
+                        appid 	bigint,
+                        mac 	bigint,
+                        linux 	bigint,
+                        windows bigint
+                ) as $$
+                begin
+                    drop table if exists app_time;
+                    create table if not exists app_time (
+                        appid 	bigint,
+                        mac 	bigint,
+                        linux 	bigint,
+                        windows bigint
+                    );
+                    
+                    insert into app_time(appid, mac, linux, windows)
+                    select inventory.appid, playtime.mac, playtime.linux, playtime.windows
+                    from accs
+                    join inventory on accs.id = inventory.user_id 
+                    join playtime on inventory.playtime_id  = playtime.id
+                    where accs."name" = n;
+
+                    return query
+                    select *
+                    from app_time;
+                end;
+                $$ language plpgsql;
+
+                select row_to_json(r) from get_user_time('{name}') as r;
+                '''
+            )
+            try:
+                data = cur.fetchall()
+            except Exception as e:
+                print(e)
+                return None
+        return data

@@ -219,6 +219,3 @@ for each row execute procedure playtime_forever_handler();
 update playtime_view
 set linux = 100
 where playtime_view.id = '721fd6b0-9075-4e75-a900-98bff29f75e2';
-
-
-
